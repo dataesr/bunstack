@@ -76,7 +76,7 @@ runs:
     - name: Build and push Docker image
       shell: bash
       run: |
-        echo "${{ inputs.docker_password }}" | docker login -u "${{ inputs.docker_username }}" --password-stdin
+        echo "${{ inputs.docker_password }}" | docker login ghcr.io -u "${{ inputs.docker_username }}" --password-stdin
         docker build -t ghcr.io/${{ github.repository_owner }}/${{ env.REPO_NAME }}:${{ env.IMAGE_TAG }} .
         docker push ghcr.io/${{ github.repository_owner }}/${{ env.REPO_NAME }}:${{ env.IMAGE_TAG }}
 
