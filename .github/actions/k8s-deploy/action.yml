@@ -29,10 +29,10 @@ inputs:
     description: "Base64 encoded kubeconfig file"
     required: true
   docker_password:
-    description: "Base64 encoded kubeconfig file"
+    description: "docker password"
     required: true
   docker_username:
-    description: "Base64 encoded kubeconfig file"
+    description: "docker username"
     required: true
   env_secrets:
     description: "Base64 encoded .env file containing secrets"
@@ -56,8 +56,8 @@ runs:
     - name: Configure kubectl
       shell: bash
       run: |
-        echo "${{ inputs.kube_config }}" | base64 -d > kubeconfig
-        export KUBECONFIG=./kubeconfig
+        echo "${{ inputs.kube_config }}" | base64 -d > /tmp/kubeconfig
+        export KUBECONFIG=/tmp/kubeconfig
 
     - name: Install Kustomize
       shell: bash
