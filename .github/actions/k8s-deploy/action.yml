@@ -56,8 +56,8 @@ runs:
     - name: Configure kubectl
       shell: bash
       run: |
-        echo "${{ inputs.kube_config }}" | base64 -d > kubeconfig.yaml
-        export KUBECONFIG=./kubeconfig.yaml
+        echo "${{ inputs.kube_config }}" | base64 -d > kubeconfig
+        export KUBECONFIG=./kubeconfig
 
     - name: Install Kustomize
       shell: bash
