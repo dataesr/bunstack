@@ -57,13 +57,9 @@ runs:
       shell: bash
       run: |
         echo "${{ inputs.kube_config }}" | base64 -d > kubeconfig
-        export KUBECONFIG=./kubeconfig
-
-    - name: Check kubectl configuration
-      shell: bash
-      run: |
-        kubectl config view
-        kubectl cluster-info
+        echo "KUBECONFIG=$PWD/kubeconfig" >> $GITHUB_ENV
+        # Verify the kubeconfig
+        kubectl config view --raw
 
     - name: Install Kustomize
       shell: bash
