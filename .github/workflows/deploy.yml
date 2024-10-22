@@ -20,6 +20,8 @@ jobs:
           memory_request: 128Mi
           memory_limit: 256Mi
           kube_config: ${{ secrets.KUBE_CONFIG_DOAD_STAGING }}
+          docker_username: ${{ github.actor }}
+          docker_password: ${{ secrets.GITHUB_TOKEN}}
           # env_secrets: ${{ secrets.MAIN_ENV_SECRETS }}
       - name: Get deployment URL
         run: echo "Deployed to ${{ steps.deploy.outputs.deployment_url }}"
