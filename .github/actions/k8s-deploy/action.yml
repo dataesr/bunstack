@@ -28,6 +28,12 @@ inputs:
   kube_config:
     description: "Base64 encoded kubeconfig file"
     required: true
+  docker_password:
+    description: "Base64 encoded kubeconfig file"
+    default: ${{ secrets.GITHUB_TOKEN }}
+  docker_username:
+    description: "Base64 encoded kubeconfig file"
+    default: ${{ github.actor }}
   env_secrets:
     description: "Base64 encoded .env file containing secrets"
     required: false
@@ -70,7 +76,7 @@ runs:
     - name: Build and push Docker image
       shell: bash
       run: |
-        echo "${{ secrets.GITHUB_TOKEN }}" | docker login -u "${{ github.actor }}" --password-stdin
+        echo "${{ inputs.docker_password }}" | docker login -u "${{ inputs.docker_username }}" --password-stdin
         docker build -t ghcr.io/${{ github.repository_owner }}/${{ env.REPO_NAME }}:${{ env.IMAGE_TAG }} .
         docker push ghcr.io/${{ github.repository_owner }}/${{ env.REPO_NAME }}:${{ env.IMAGE_TAG }}
 
