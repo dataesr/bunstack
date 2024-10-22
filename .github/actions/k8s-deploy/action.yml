@@ -70,6 +70,7 @@ runs:
     - name: Build and push Docker image
       shell: bash
       run: |
+        echo "${{ secrets.GITHUB_TOKEN }}" | docker login -u "${{ github.actor }}" --password-stdin
         docker build -t ghcr.io/${{ github.repository_owner }}/${{ env.REPO_NAME }}:${{ env.IMAGE_TAG }} .
         docker push ghcr.io/${{ github.repository_owner }}/${{ env.REPO_NAME }}:${{ env.IMAGE_TAG }}
 
@@ -84,6 +85,12 @@ runs:
           name: ${{ env.REPO_NAME }}
         spec:
           replicas: ${{ inputs.replicas }}
+          revisionHistoryLimit: 1
+          strategy:
+            type: RollingUpdate
+            rollingUpdate:
+              maxSurge: 1
+              maxUnavailable: 0
           selector:
             matchLabels:
               app: ${{ env.REPO_NAME }}

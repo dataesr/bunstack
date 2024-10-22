@@ -14,14 +14,21 @@ jobs:
         uses: ./.github/actions/k8s-deploy
         with:
           app_port: 3000
-          replicas: 2
+          replicas: 1
           cpu_request: 100m
           cpu_limit: 200m
           memory_request: 128Mi
           memory_limit: 256Mi
-          kube_config: ${{ secrets.KUBECONFIG }}
-          docker_username: ${{ secrets.DOCKER_USERNAME }}
-          docker_password: ${{ secrets.DOCKER_PASSWORD }}
-          env_secrets: ${{ secrets.MAIN_ENV_SECRETS }}
+          kube_config: ${{ secrets.KUBE_CONFIG_DOAD_STAGING }}
+          # env_secrets: ${{ secrets.MAIN_ENV_SECRETS }}
       - name: Get deployment URL
         run: echo "Deployed to ${{ steps.deploy.outputs.deployment_url }}"
+
+      - name: 📢 Notify in mattermost channel
+        if: always()
+        uses: dataesr/mm-notifier-action@v1.0.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN}}
+          mattermost_webhook_url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+          mattermost_channel: ${{ env.MM_NOTIFICATION_CHANNEL}}
+          deployment_url: ${{ steps.deploy.outputs.deployment_url }}
