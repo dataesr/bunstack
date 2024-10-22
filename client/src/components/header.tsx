@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
+import useVersion from "@/hooks/useVersion";
+
 
 const Header: React.FC = () => {
+  const { data } = useVersion();
   return (
     <header role="banner" className="fr-header">
       <div className="fr-header__body">
@@ -24,6 +27,7 @@ const Header: React.FC = () => {
                 <a href="/" title="Accueil - [À MODIFIER - Nom du site / service] - Nom de l’entité (ministère, secrétariat d‘état, gouvernement)">
                   <p className="fr-header__service-title">
                     Nom du site / service
+                    {data?.version && <span className="fr-badge fr-badge--green-emeraude">{data?.version}</span>}
                   </p>
                 </a>
                 <p className="fr-header__service-tagline">baseline - précisions sur l‘organisation</p>

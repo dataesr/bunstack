@@ -1,0 +1,27 @@
+name: Deploy to Kubernetes
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Deploy to Kubernetes
+        uses: ./.github/actions/k8s-deploy
+        with:
+          app_port: 3000
+          replicas: 2
+          cpu_request: 100m
+          cpu_limit: 200m
+          memory_request: 128Mi
+          memory_limit: 256Mi
+          kube_config: ${{ secrets.KUBECONFIG }}
+          docker_username: ${{ secrets.DOCKER_USERNAME }}
+          docker_password: ${{ secrets.DOCKER_PASSWORD }}
+          env_secrets: ${{ secrets.MAIN_ENV_SECRETS }}
+      - name: Get deployment URL
+        run: echo "Deployed to ${{ steps.deploy.outputs.deployment_url }}"

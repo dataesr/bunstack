@@ -1,0 +1,166 @@
+name: "Kubernetes Deploy Action"
+description: "Deploy an application to Kubernetes"
+inputs:
+  app_port:
+    description: "The port on which the application runs"
+    required: false
+    default: "3000"
+  replicas:
+    description: "Number of replicas for the deployment"
+    required: false
+    default: "1"
+  cpu_request:
+    description: "CPU request for the container (e.g., 100m)"
+    required: false
+    default: "100m"
+  cpu_limit:
+    description: "CPU limit for the container (e.g., 200m)"
+    required: false
+    default: "200m"
+  memory_request:
+    description: "Memory request for the container (e.g., 128Mi)"
+    required: false
+    default: "128Mi"
+  memory_limit:
+    description: "Memory limit for the container (e.g., 256Mi)"
+    required: false
+    default: "256Mi"
+  kube_config:
+    description: "Base64 encoded kubeconfig file"
+    required: true
+  env_secrets:
+    description: "Base64 encoded .env file containing secrets"
+    required: false
+    default: ""
+
+outputs:
+  deployment_url:
+    description: "The URL of the deployed application"
+    value: ${{ steps.set-output.outputs.deployment_url }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v1
+
+    - name: Configure kubectl
+      shell: bash
+      run: |
+        echo "${{ inputs.kube_config }}" | base64 -d > kubeconfig.yaml
+        export KUBECONFIG=./kubeconfig.yaml
+
+    - name: Install Kustomize
+      shell: bash
+      run: |
+        curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+        sudo mv kustomize /usr/local/bin/
+
+    - name: Set environment variables
+      shell: bash
+      run: |
+        echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+        echo "IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_ENV
+        echo "REPO_NAME=$(echo ${GITHUB_REPOSITORY#*/} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+        echo "DEPLOYMENT_URL=$(echo ${GITHUB_REPOSITORY#*/} | tr '[:upper:]' '[:lower:]')-${GITHUB_REF#refs/heads/}.staging.dataesr.ovh" >> $GITHUB_ENV
+
+    - name: Build and push Docker image
+      shell: bash
+      run: |
+        docker build -t ghcr.io/${{ github.repository_owner }}/${{ env.REPO_NAME }}:${{ env.IMAGE_TAG }} .
+        docker push ghcr.io/${{ github.repository_owner }}/${{ env.REPO_NAME }}:${{ env.IMAGE_TAG }}
+
+    - name: Create Kustomize files
+      shell: bash
+      run: |
+        mkdir -p kustomize/base
+        cat <<EOF > kustomize/base/deployment.yaml
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: ${{ env.REPO_NAME }}
+        spec:
+          replicas: ${{ inputs.replicas }}
+          selector:
+            matchLabels:
+              app: ${{ env.REPO_NAME }}
+          template:
+            metadata:
+              labels:
+                app: ${{ env.REPO_NAME }}
+            spec:
+              containers:
+              - name: app
+                image: ghcr.io/${{ github.repository_owner }}/${{ env.REPO_NAME }}:${{ env.IMAGE_TAG }}
+                ports:
+                - containerPort: ${{ inputs.app_port }}
+                resources:
+                  requests:
+                    cpu: ${{ inputs.cpu_request }}
+                    memory: ${{ inputs.memory_request }}
+                  limits:
+                    cpu: ${{ inputs.cpu_limit }}
+                    memory: ${{ inputs.memory_limit }}
+                ${{ inputs.env_secrets != '' && 'envFrom:' || '' }}
+                ${{ inputs.env_secrets != '' && '- secretRef:' || '' }}
+                ${{ inputs.env_secrets != '' && '    name: ${{ env.REPO_NAME }}-secrets' || '' }}
+        EOF
+
+        cat <<EOF > kustomize/base/service.yaml
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: ${{ env.REPO_NAME }}-svc
+        spec:
+          selector:
+            app: ${{ env.REPO_NAME }}
+          ports:
+          - port: 80
+            targetPort: ${{ inputs.app_port }}
+        EOF
+
+        cat <<EOF > kustomize/base/ingress.yaml
+        apiVersion: traefik.io/v1alpha1
+        kind: IngressRoute
+        metadata:
+          name: ${{ env.REPO_NAME }}
+        spec:
+          entryPoints:
+            - websecure
+          routes:
+            - match: Host(${{ env.DEPLOYMENT_URL }})
+              kind: Rule
+              services:
+                - name: ${{ env.REPO_NAME }}-svc
+                  port: 80
+          tls: {}
+        EOF
+
+        cat <<EOF > kustomize/base/kustomization.yaml
+        resources:
+        - deployment.yaml
+        - service.yaml
+        - ingress.yaml
+        ${{ inputs.env_secrets != '' && '- secrets.yaml' || '' }}
+        EOF
+
+    - name: Create Kubernetes Secret
+      if: inputs.env_secrets != ''
+      shell: bash
+      run: |
+        echo "${{ inputs.env_secrets }}" | base64 -d > .env
+        kubectl create secret generic ${{ env.REPO_NAME }}-secrets --from-env-file=.env --dry-run=client -o yaml > kustomize/base/secrets.yaml
+        rm .env
+
+    - name: Deploy to Kubernetes
+      shell: bash
+      run: |
+        kustomize build kustomize/base | kubectl apply -f -
+
+    - name: Set output
+      id: set-output
+      shell: bash
+      run: echo "deployment_url=${{ env.DEPLOYMENT_URL }}" >> $GITHUB_OUTPUT

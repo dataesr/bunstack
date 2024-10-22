@@ -1,6 +1,6 @@
 import Elysia from 'elysia';
 
-import { HealthySchema, PingPongSchema } from '~/schemas/healthy';
+import { HealthySchema, PingPongSchema, VersionSchema } from '~/schemas/healthy';
 
 
 export const healthyRoutes = new Elysia()
@@ -19,5 +19,17 @@ export const healthyRoutes = new Elysia()
         200: HealthySchema
       },
       summary: 'Check if the server is healthy',
+    }
+  )
+  .get(
+    '/version',
+    () => {
+      return { version: Bun.env.VERSION ?? '0.0.0' }
+    },
+    {
+      reponse: {
+        200: VersionSchema
+      },
+      summary: 'Returns the version of the application',
     }
   )
