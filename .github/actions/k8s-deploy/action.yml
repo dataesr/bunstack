@@ -72,7 +72,7 @@ runs:
         echo "IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_ENV
         echo "REPO_NAME=$(echo ${GITHUB_REPOSITORY#*/} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
         echo "DEPLOYMENT_NAME=$(echo ${GITHUB_REPOSITORY#*/} | tr '[:upper:]' '[:lower:]')-${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
-        echo "DEPLOYMENT_URL=${{env.DEPLOYMENT_NAME}}.staging.dataesr.ovh" >> $GITHUB_ENV
+        echo "DEPLOYMENT_URL=$(echo ${GITHUB_REPOSITORY#*/} | tr '[:upper:]' '[:lower:]')-${GITHUB_REF#refs/heads/}.staging.dataesr.ovh" >> $GITHUB_ENV
 
     - name: Build and push Docker image
       shell: bash
