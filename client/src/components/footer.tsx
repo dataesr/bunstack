@@ -12,7 +12,7 @@ const Footer: React.FC = () => {
             </a>
           </div>
           <div className="fr-footer__content">
-            <p className="fr-footer__content-desc">Lorem ipsum dolor sit amet, consectetur adipiscing, incididunt, ut labore et dolore magna aliqua. Vitae sapien pellentesque habitant morbi tristique senectus et. Diam maecenas sed enim ut. Accumsan lacus vel facilisis volutpat est. Ut aliqu</p>
+            <p className="fr-footer__content-desc">Lorem ipsum dolor sit amet, consectetur adipiscing, incididunt, ut labore et dolore magna aliqua. Vitae sapien pellentesque habitant morbi tristique senectus et. Ut aliqu</p>
             <ul className="fr-footer__content-list">
               <li className="fr-footer__content-item">
                 <a className="fr-footer__content-link" target="_blank" rel="noopener external" title="info.gouv.fr - nouvelle fenêtre" href="https://info.gouv.fr">info.gouv.fr</a>
