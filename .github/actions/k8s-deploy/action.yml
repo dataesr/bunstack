@@ -145,7 +145,7 @@ runs:
           entryPoints:
             - websecure
           routes:
-            - match: Host(```${{ env.DEPLOYMENT_NAME }}.staging.dataesr.ovh```)
+            - match: Host(\`${{ env.DEPLOYMENT_URL }}\`)
               kind: Rule
               services:
                 - name: ${{ env.DEPLOYMENT_NAME }}
