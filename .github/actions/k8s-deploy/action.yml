@@ -58,8 +58,6 @@ runs:
       run: |
         echo "${{ inputs.kube_config }}" | base64 -d > kubeconfig
         echo "KUBECONFIG=$PWD/kubeconfig" >> $GITHUB_ENV
-        # Verify the kubeconfig
-        kubectl config view --raw
 
     - name: Install Kustomize
       shell: bash
@@ -73,7 +71,8 @@ runs:
         echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
         echo "IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_ENV
         echo "REPO_NAME=$(echo ${GITHUB_REPOSITORY#*/} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
-        echo "DEPLOYMENT_URL=$(echo ${GITHUB_REPOSITORY#*/} | tr '[:upper:]' '[:lower:]')-${GITHUB_REF#refs/heads/}.staging.dataesr.ovh" >> $GITHUB_ENV
+        echo "DEPLOYMENT_NAME=$(echo ${GITHUB_REPOSITORY#*/} | tr '[:upper:]' '[:lower:]')-${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+        echo "DEPLOYMENT_URL=${{env.DEPLOYMENT_NAME}}.staging.dataesr.ovh" >> $GITHUB_ENV
 
     - name: Build and push Docker image
       shell: bash
@@ -90,7 +89,7 @@ runs:
         apiVersion: apps/v1
         kind: Deployment
         metadata:
-          name: ${{ env.REPO_NAME }}
+          name: ${{ env.DEPLOYMENT_NAME }}
         spec:
           replicas: ${{ inputs.replicas }}
           revisionHistoryLimit: 1
@@ -101,11 +100,11 @@ runs:
               maxUnavailable: 0
           selector:
             matchLabels:
-              app: ${{ env.REPO_NAME }}
+              app: ${{ env.DEPLOYMENT_NAME }}
           template:
             metadata:
               labels:
-                app: ${{ env.REPO_NAME }}
+                app: ${{ env.DEPLOYMENT_NAME }}
             spec:
               containers:
               - name: app
@@ -121,17 +120,17 @@ runs:
                     memory: ${{ inputs.memory_limit }}
                 ${{ inputs.env_secrets != '' && 'envFrom:' || '' }}
                 ${{ inputs.env_secrets != '' && '- secretRef:' || '' }}
-                ${{ inputs.env_secrets != '' && '    name: ${{ env.REPO_NAME }}-secrets' || '' }}
+                ${{ inputs.env_secrets != '' && '    name: ${{ env.DEPLOYMENT_NAME }}-secrets' || '' }}
         EOF
 
         cat <<EOF > kustomize/base/service.yaml
         apiVersion: v1
         kind: Service
         metadata:
-          name: ${{ env.REPO_NAME }}-svc
+          name: ${{ env.DEPLOYMENT_NAME }}
         spec:
           selector:
-            app: ${{ env.REPO_NAME }}
+            app: ${{ env.DEPLOYMENT_NAME }}
           ports:
           - port: 80
             targetPort: ${{ inputs.app_port }}
@@ -141,15 +140,15 @@ runs:
         apiVersion: traefik.io/v1alpha1
         kind: IngressRoute
         metadata:
-          name: ${{ env.REPO_NAME }}
+          name: ${{ env.DEPLOYMENT_NAME }}
         spec:
           entryPoints:
             - websecure
           routes:
-            - match: Host(${{ env.DEPLOYMENT_URL }})
+            - match: Host(`${{ env.DEPLOYMENT_URL }}`)
               kind: Rule
               services:
-                - name: ${{ env.REPO_NAME }}-svc
+                - name: ${{ env.DEPLOYMENT_NAME }}
                   port: 80
           tls: {}
         EOF
@@ -167,7 +166,7 @@ runs:
       shell: bash
       run: |
         echo "${{ inputs.env_secrets }}" | base64 -d > .env
-        kubectl create secret generic ${{ env.REPO_NAME }}-secrets --from-env-file=.env --dry-run=client -o yaml > kustomize/base/secrets.yaml
+        kubectl create secret generic ${{ env.DEPLOYMENT_NAME }}-secrets --from-env-file=.env --dry-run=client -o yaml > kustomize/base/secrets.yaml
         rm .env
 
     - name: Deploy to Kubernetes
