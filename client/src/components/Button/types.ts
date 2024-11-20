@@ -17,10 +17,6 @@ export type ColorFamily =
   | 'brown-opera'
   | 'beige-gris-galet';
 
-export type ColorType =
-  | 'info'
-  | 'error'
-  | 'warning'
-  | 'success'
+export type ColorType = 'info' | 'error' | 'warning' | 'success';
 
 export type DSFRColors = ColorType | ColorFamily;

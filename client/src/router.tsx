@@ -1,7 +1,7 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route } from 'react-router-dom';
 import Home from '@/routes';
 import About from '@/routes/about';
-import Layout from "@/layouts/main";
+import Layout from '@/layouts/main';
 
 export default function Router() {
   return (

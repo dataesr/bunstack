@@ -7,6 +7,6 @@ export default function useServerHealth() {
     queryFn: async () => {
       const { data } = await api.healthy.get();
       return data;
-    }
-  })
+    },
+  });
 }

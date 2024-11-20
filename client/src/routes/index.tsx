@@ -1,4 +1,4 @@
-import useServerHealth from "@/hooks/useServerHealth";
+import useServerHealth from '@/hooks/useServerHealth';
 
 const Home: React.FC = () => {
   const { data, isLoading } = useServerHealth();
@@ -9,7 +9,7 @@ const Home: React.FC = () => {
         <p>Server status: {isLoading ? '...loading' : data?.healthy ? 'Healthy' : 'Down'}</p>
       </div>
     </>
-  )
-}
+  );
+};
 
 export default Home;

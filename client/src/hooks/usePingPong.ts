@@ -7,6 +7,6 @@ export default function usePingPong() {
     queryFn: async () => {
       const { data } = await api.ping.get();
       return data;
-    }
-  })
+    },
+  });
 }

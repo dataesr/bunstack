@@ -7,6 +7,6 @@ export default function useVersion() {
     queryFn: async () => {
       const { data } = await api.version.get();
       return data;
-    }
-  })
+    },
+  });
 }

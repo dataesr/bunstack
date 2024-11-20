@@ -22,17 +22,23 @@ export const ButtonGroup = ({
   ...props
 }: ButtonGroupProps) => {
   const id = useId();
-  const _classes = cn('fr-btns-group', {
-    [`fr-btns-group--${size}`]: (size !== 'md'),
-    [`fr-btns-group--${align}`]: (align !== 'left'),
-    'fr-btns-group--inline': (isInlineFrom === 'xs'),
-    [`fr-btns-group--inline-${isInlineFrom}`]: (isInlineFrom && isInlineFrom !== 'xs'),
-    'fr-btns-group--inline-reverse': isReversed,
-    'fr-btns-group--equisized': isEquisized,
-  }, className);
+  const _classes = cn(
+    'fr-btns-group',
+    {
+      [`fr-btns-group--${size}`]: size !== 'md',
+      [`fr-btns-group--${align}`]: align !== 'left',
+      'fr-btns-group--inline': isInlineFrom === 'xs',
+      [`fr-btns-group--inline-${isInlineFrom}`]: isInlineFrom && isInlineFrom !== 'xs',
+      'fr-btns-group--inline-reverse': isReversed,
+      'fr-btns-group--equisized': isEquisized,
+    },
+    className,
+  );
   return (
     <ul className={_classes} {...props}>
-      {Children.map(children, (child, index) => <li key={`${id}-${index}`}>{child}</li>)}
+      {Children.map(children, (child, index) => (
+        <li key={`${id}-${index}`}>{child}</li>
+      ))}
     </ul>
   );
 };
